@@ -1,0 +1,124 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Status Board - Google Sheet (Direct)</title>
+  <style>
+    body {
+      font-family: 'Bahnschrift', sans-serif;
+      background: #f0f2f5;
+      margin: 0;
+      padding: 1rem;
+    }
+    header {
+      text-align: center;
+      font-size: 2rem;
+      background-color: #002244;
+      color: white;
+      padding: 1rem;
+    }
+    .grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center;
+    }
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 1rem;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      width: 400px;
+    }
+    select, input {
+      width: 100%;
+      padding: 0.5rem;
+      margin-top: 0.5rem;
+      margin-bottom: 1rem;
+      font-size: 1rem;
+    }
+    label {
+      display: block;
+      font-weight: bold;
+    }
+    h2 {
+      margin-top: 0;
+    }
+    #refreshBtn {
+      margin: 1rem auto;
+      display: block;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <header>Status Board</header>
+  <button id="refreshBtn" onclick="loadCrewData()">🔁 Refresh Crew Data</button>
+  <div class="grid">
+    <div class="card">
+      <h2>Ready Crew — <select id="boatTypes"></select></h2>
+      <label>Coxswain:</label>
+      <select id="coxswains"></select>
+      <label>Engineer:</label>
+      <select id="engineers"></select>
+      <label>Boat Crew Member:</label>
+      <select id="boatcrew"></select>
+    </div>
+    <div class="card">
+      <h2>Officers</h2>
+      <label>Officer of the Day:</label>
+      <select id="OOD"></select>
+      <label>Engineer of the Watch:</label>
+      <select id="EOW"></select>
+      <label>Command Duty Officer:</label>
+      <select id="CDO"></select>
+    </div>
+    <div class="card">
+      <h2>Law Enforcement</h2>
+      <label>Boarding Officer:</label>
+      <select id="BO"></select>
+      <label>Boarding Team Member:</label>
+      <select id="BTM"></select>
+    </div>
+  </div>
+
+  <script>
+    async function loadCrewData() {
+      const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS21JN2eXc5AtEyldqMTHaarJsyBMzxTrxjUffc9IUleR1z12pdsRtmAgERDnRwL05QOElTxLCEJHYO/pub?output=csv';
+      try {
+        const response = await fetch(sheetURL);
+        const text = await response.text();
+        const rows = text.trim().split('\n').map(row => row.split(','));
+        const headers = rows[0];
+        const data = {};
+        headers.forEach(h => data[h] = []);
+        for (let i = 1; i < rows.length; i++) {
+          rows[i].forEach((cell, j) => {
+            if (cell.trim()) data[headers[j]].push(cell.trim());
+          });
+        }
+
+        headers.forEach(h => {
+          const el = document.getElementById(h);
+          if (el) {
+            el.innerHTML = '<option value="">-- Select --</option>';
+            data[h].forEach(name => {
+              const opt = document.createElement('option');
+              opt.value = name;
+              opt.textContent = name;
+              el.appendChild(opt);
+            });
+          }
+        });
+      } catch (err) {
+        alert("Could not load data from Google Sheets. Please check your internet connection and permissions.");
+        console.error(err);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadCrewData);
+  </script>
+</body>
+</html>
